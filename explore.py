@@ -89,3 +89,9 @@ print(laps.loc[laps['slow'],['driver_number', 'lap_number', 'lap_duration', 'rea
 unexplained = laps.loc[laps['slow'] & (laps['reason']==''), ['driver_number', 'lap_number', 'lap_duration']]
 print ('Slow laps with no reason yet:')
 print (unexplained)
+
+
+print ("2022 Hungary Race:")
+sessions = get_data("sessions", year=2024, country_name="Hungary", session_name="Race")
+print(sessions[["session_key", "location", "date_start"]])
+
