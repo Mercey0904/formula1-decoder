@@ -2,3 +2,5 @@ data/cache/
 notebooks/pandas_practice.ipynb
 __pycache__/
 *.pyc
+.venv/
+.env

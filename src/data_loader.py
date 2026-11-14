@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 import requests
+import time 
 
 BASE_URL="https://api.openf1.org/v1"
 
@@ -18,26 +19,26 @@ CACHE_DIR = Path(__file__).parent.parent / "data" / "cache"
 FIRST_OPENF1_YEAR =2023
 
 def fetch_json(endpoint, **params):
-    #Fetch raw data from OpenF1. Returns a list of dictionaries.
+    # Fetch raw data from OpenF1. Returns a list of dictionaries.
     response = requests.get(f"{BASE_URL}/{endpoint}", params=params, timeout=30)
     response.raise_for_status()
     return response.json()
 
 
 def _normalise(text):
-    #Lowercase and strip accents, so "montreal" matches "Montréal"
+    # Lowercase and strip accents, so "montreal" matches "Montréal"
     decomposed = unicodedata.normalize("NFKD", text)
     without_accents = "".join(c for c in decomposed if not unicodedata.combining(c))
     return without_accents.strip().lower()
 
 
 def find_session_key(year, location):
-    """Find the session key for a race, e.g. (2024, "Monza")."""
+    # Find the session key for a race, e.g. (2024, "Monza").
     # Fetch every race in the season (not filtered by location), so we can
     # match the location ourselves and list valid options if it isn't found.
 
     if year<FIRST_OPENF1_YEAR:
-            raise ValueError(f"No race data found for {year}. OpenF1 only has data from 2023 onwards.")
+        raise ValueError(f"No race data found for {year}. OpenF1 only has data from 2023 onwards.")
     try:
         sessions = fetch_json("sessions", year=year, session_name="Race")
     except requests.HTTPError as err:
@@ -45,7 +46,7 @@ def find_session_key(year, location):
         if err.response is not None and err.response.status_code == 404:
             sessions = []
         else:
-            raise #display ori error message
+            raise # display ori error message
 
     if not sessions:
         raise ValueError(f"No race data is found for {year} yet")
@@ -60,7 +61,7 @@ def find_session_key(year, location):
 
 
 def get_cached(endpoint, session_key):
-    #Get one endpoint's data for a session, using the cache when possible."""
+    # Get one endpoint's data for a session, using the cache when possible.
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cache_file = CACHE_DIR / f"{endpoint}_{session_key}.json"
 
@@ -74,6 +75,7 @@ def get_cached(endpoint, session_key):
 
     if data is None:
         data = fetch_json(endpoint, session_key=session_key)
+        time.sleep(0.4) # prevent too many request error
         with open(cache_file, "w", encoding="utf-8") as file:
             json.dump(data, file)
 
@@ -81,10 +83,9 @@ def get_cached(endpoint, session_key):
 
 
 def load_race(year, location):
-    """Load everything we need for one race. Returns a dict of DataFrames."""
+    # Load everything we need for one race. Returns a dict of DataFrames.
     session_key = find_session_key(year, location)
 
-    # TODO 4: return a dictionary with these keys, each using get_cached:
     #   "laps", "stints", "pit", "race_control", "drivers",
     #   "session_result", "position", "intervals"
     # (the dictionary key and the endpoint name are the same)
