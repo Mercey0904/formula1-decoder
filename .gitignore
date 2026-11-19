@@ -1,5 +1,6 @@
 data/cache/
 notebooks/pandas_practice.ipynb
+notebooks/RaceDecoder_Plan.md
 __pycache__/
 *.pyc
 .venv/
